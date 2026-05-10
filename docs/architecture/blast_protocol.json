@@ -1,0 +1,80 @@
+{
+  "project": "Shadow Bet",
+  "prompt_title": "God-Level Build Prompt — Remaining 35-40%",
+  "version": "1.0",
+  "description": "Complete specification for all remaining unbuilt and partially built features. Every button, every state, every navigation, every DB call, every error case defined. No assumptions. No guessing. Follow exactly.",
+
+  "absolute_rules": [
+    "Never redirect to /login unless user explicitly clicks a login button",
+    "Never redirect to /signup unless user explicitly clicks a signup button",
+    "All modals, paywalls, popups render INSIDE the current page — never a new route",
+    "All Supabase Realtime subscriptions must be unsubscribed on component unmount",
+    "Never hardcode user_id — always fetch from active Supabase auth session",
+    "Never assume wallet balance — always fetch fresh from DB before any transaction",
+    "All money values stored in PAISE in DB (₹1 = 100 paise). Display in ₹ to user",
+    "Every async function must be wrapped in try/catch with proper error handling",
+    "Never clear user input on failed submission — preserve what they typed",
+    "console.log every Supabase error with full error object for debugging",
+    "return_url param must be passed to /login and /signup on every redirect",
+    "All RLS policies must be set before any feature is tested",
+    "Optimistic UI for likes and votes — update instantly, sync in background, revert on failure",
+    "Every loading state must show a skeleton or spinner — never a blank screen"
+  ],
+
+  "database_setup": {
+    "new_tables_required": [
+      {
+        "table": "wallets",
+        "sql": "CREATE TABLE wallets (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE, balance_paise INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ DEFAULT NOW());"
+      },
+      {
+        "table": "transactions",
+        "sql": "CREATE TABLE transactions (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID NOT NULL REFERENCES auth.users(id), type TEXT NOT NULL CHECK (type IN ('topup','bet_entry','payout_win','payout_refund','platform_cut')), amount_paise INTEGER NOT NULL, dare_id UUID REFERENCES dares(id) NULL, razorpay_order_id TEXT NULL, razorpay_payment_id TEXT NULL, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','success','failed','refunded')), created_at TIMESTAMPTZ DEFAULT NOW());"
+      },
+      {
+        "table": "dare_bets",
+        "sql": "CREATE TABLE dare_bets (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, dare_id UUID NOT NULL REFERENCES dares(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES auth.users(id), amount_paise INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','won','lost','refunded')), created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(dare_id, user_id));"
+      },
+      {
+        "table": "dare_votes",
+        "sql": "CREATE TABLE dare_votes (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, dare_id UUID NOT NULL REFERENCES dares(id) ON DELETE CASCADE, voter_id UUID NOT NULL REFERENCES auth.users(id), vote TEXT NOT NULL CHECK (vote IN ('pass','fail')), created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(dare_id, voter_id));"
+      },
+      {
+        "table": "shadow_xp",
+        "sql": "CREATE TABLE shadow_xp (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID NOT NULL REFERENCES auth.users(id) UNIQUE, xp_total INTEGER NOT NULL DEFAULT 0, evolution_stage INTEGER NOT NULL DEFAULT 1 CHECK (evolution_stage BETWEEN 1 AND 5), last_updated TIMESTAMPTZ DEFAULT NOW());"
+      },
+      {
+        "table": "niche_members",
+        "sql": "CREATE TABLE niche_members (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, niche_id UUID NOT NULL REFERENCES niches(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES auth.users(id), joined_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(niche_id, user_id));"
+      },
+      {
+        "table": "dare_leaderboard_entries",
+        "sql": "CREATE TABLE dare_leaderboard_entries (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, dare_id UUID NOT NULL REFERENCES dares(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES auth.users(id), amount_paise INTEGER NOT NULL, vote_count INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'active', created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(dare_id, user_id));"
+      }
+    ],
+    "column_additions_to_existing_tables": [
+      {
+        "table": "dares",
+        "add_columns": [
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS total_pot_paise INTEGER NOT NULL DEFAULT 0;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','voting','completed','expired','cancelled'));",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS proof_url TEXT NULL;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS proof_submitted_at TIMESTAMPTZ NULL;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS voting_ends_at TIMESTAMPTZ NULL;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS winner_user_id UUID REFERENCES auth.users(id) NULL;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS votes_pass INTEGER NOT NULL DEFAULT 0;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS votes_fail INTEGER NOT NULL DEFAULT 0;",
+          "ALTER TABLE dares ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '23 hours');"
+        ]
+      },
+      {
+        "table": "shadows",
+        "add_columns": [
+          "ALTER TABLE shadows ADD COLUMN IF NOT EXISTS evolution_stage INTEGER NOT NULL DEFAULT 1;",
+          "ALTER TABLE shadows ADD COLUMN IF NOT EXISTS archetype TEXT NOT NULL DEFAULT 'The Void';",
+          "ALTER TABLE shadows ADD COLUMN IF NOT EXISTS xp INTEGER NOT NULL DEFAULT 0;"
+        ]
+      }
+    ]
+  }
+}

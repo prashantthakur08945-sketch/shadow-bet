@@ -1,26 +1,112 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0D0D0D;
+  --surface: #1A1A2E;
+  --surface-2: #16213E;
+  --primary: #6C2BD9;
+  --primary-glow: #8B5CF6;
+  --accent: #E040FB;
+  --danger: #FF4757;
+  --success: #2ED573;
+  --text-primary: #F5F0FF;
+  --text-muted: #9E9E9E;
+  --border: #2D1B5E;
+  --glass-bg: rgba(26, 26, 46, 0.7);
+  --text-on-primary: #FFFFFF;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.light-theme {
+  --bg: #FFFFFF;
+  --surface: #F2F2F2;
+  --surface-2: #E5E5E5;
+  --primary: #6C2BD9;
+  --primary-glow: #4C1D95;
+  --accent: #D946EF;
+  --danger: #EF4444;
+  --success: #059669;
+  --text-primary: #000000;
+  --text-muted: #000000;
+  --border: #D4D4D4;
+  --glass-bg: rgba(245, 245, 245, 0.9);
+  --text-on-primary: #FFFFFF;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-primary: var(--primary);
+  --color-primary-glow: var(--primary-glow);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-glass: var(--glass-bg);
+  --color-text-on-primary: var(--text-on-primary);
+  
+  --font-inter: var(--font-inter);
+  --font-space: var(--font-space);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-inter), sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, .shadow-font {
+    font-family: var(--font-space), sans-serif;
+  }
+
+  /* All inputs inherit theme text color — catches any un-styled elements */
+  input, textarea, select {
+    color: var(--color-text-primary);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.7;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Smooth transition when switching themes */
+.light-theme * {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+@layer components {
+  .glow-primary {
+    box-shadow: 0 0 15px var(--color-primary);
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-border);
+  }
+
+  .input-chaos {
+    @apply bg-transparent border-b-2 border-[--color-border] focus:border-[--color-primary] outline-none transition-all py-2 text-xl;
+  }
+
+  /* Custom Global Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
 }
