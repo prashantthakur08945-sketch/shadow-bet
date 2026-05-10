@@ -21,20 +21,18 @@ export default function SignupForm({ defaultIsLogin = true }: { defaultIsLogin?:
     setError('');
     setSuccess('');
     try {
+      const credentials = method === 'email' 
+        ? { email: value, password } 
+        : { phone: value, password };
+
       if (isLogin) {
         // Sign In Flow
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          [method === 'email' ? 'email' : 'phone']: value,
-          password: password,
-        });
+        const { data, error: signInError } = await supabase.auth.signInWithPassword(credentials);
         if (signInError) throw signInError;
         window.location.href = '/onboarding';
       } else {
         // Sign Up Flow
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          [method === 'email' ? 'email' : 'phone']: value,
-          password: password,
-        });
+        const { data, error: signUpError } = await supabase.auth.signUp(credentials);
         if (signUpError) throw signUpError;
         
         if (data.session) {
